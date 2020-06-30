@@ -14,7 +14,11 @@ provider "aws" {
 resource "aws_instance" "saltstack" {
   ami = "ami-0c59fb6cd1d16a1ce"
   instance_type = "t2.micro"
-  user_data = "${data.local_file.start_script.content}"
+  user_data = <<-EOF
+              #!/bin/bash
+              echo "{"health":"ok"}" > index.html
+              nohup busybox httpd -f -p "${var.default_port}" &
+              EOF 
 
   tags = {
     Name = "saltstack"
@@ -37,22 +41,13 @@ resource "aws_security_group" "instance" {
     ]
   }
 
-    # allow ssh
-  ingress {
-    from_port = 22
-    to_port = 22
-    protocol = "tcp"
-    cidr_blocks = [
-      "0.0.0.0/0"
-    ]
-  }
-
   egress {
     from_port = 0
     to_port = 0
     protocol = "-1"
     cidr_blocks = [
-      "0.0.0.0/0"]
+      "0.0.0.0/0"
+    ]
   }
 }
 
